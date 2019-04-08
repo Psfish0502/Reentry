@@ -1,0 +1,69 @@
+import oscP5.*;
+import netP5.*;
+ 
+import de.bezier.data.sql.*;
+MySQL dbconnection; 
+ 
+OscP5 oscP5;
+NetAddress myRemoteLocation;
+String aa ;
+
+void setup() {
+  size(400,400);
+  frameRate(25);
+  /* start oscP5, listening for incoming messages at port 12000 */
+  oscP5 = new OscP5(this,7676);
+  myRemoteLocation = new NetAddress("192.168.1.234",11000);
+  
+    String user     = "gateway_db";
+    String pass     = "Gateway104";
+    String database = "gateway_db";
+    dbconnection = new MySQL( this, "gateway.unidaydream.com", database, user, pass );  
+}
+
+
+void draw() {
+  background(0);  
+}
+
+void mousePressed() {
+  
+  String[] aaa=new String[5];
+  aaa[0]="/Group_D";
+  aaa[1]="JJm";
+  aaa[2]="lnn";
+  aaa[3]="hoo";
+  aaa[4]="gig";
+  
+  OscMessage myMessage = new OscMessage("/Group_D");
+  //myMessage.add(aaa[0]);
+  myMessage.add(aaa[1]); /* add an int to the osc message */
+  myMessage.add(aaa[2]);
+  myMessage.add(aaa[3]);
+  myMessage.add(aaa[4]);
+  //myMessage.add(3291802);
+  /* send the message */
+  oscP5.send(myMessage, myRemoteLocation); 
+}
+
+
+/* incoming osc message are forwarded to the oscEvent method. */
+void oscEvent(OscMessage theOscMessage) {
+  /* print the address pattern and the typetag of the received OscMessage */
+  print("### received an osc message.");
+  println(" addrpattern: "+theOscMessage.addrPattern());
+ 
+  aa=theOscMessage.addrPattern();
+  
+  if ( dbconnection.connect() )
+    {
+        dbconnection.query( "SELECT * FROM `rfid` LEFT JOIN `user` on `rfid`.uid = `user`.id WHERE `rfid`.rfid = '%s'",aa);      
+        while (dbconnection.next())
+        {
+            String s = dbconnection.getString("name");
+            println(s);
+        }
+    }
+    else {}
+}
+//8f1c3529
